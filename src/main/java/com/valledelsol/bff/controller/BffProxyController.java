@@ -41,7 +41,7 @@ public class BffProxyController {
                 .toEntity(String.class);
     }
 
-    @PostMapping("/auth/registro")
+    @PostMapping({"/auth/registro", "/auth/register"})
     public Mono<ResponseEntity<String>> registro(
             @RequestBody Map<String, Object> body) {
         // Registra en auth-service primero, luego en user-service
@@ -60,6 +60,16 @@ public class BffProxyController {
                     }
                     return Mono.just(authResp);
                 });
+    }
+
+    @GetMapping("/auth/me")
+    public Mono<ResponseEntity<String>> me(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+        return authClient.get()
+                .uri("/auth/me")
+                .header(HttpHeaders.AUTHORIZATION, auth)
+                .retrieve()
+                .toEntity(String.class);
     }
 
     // ── USUARIOS ─────────────────────────────────────────────────────────────
