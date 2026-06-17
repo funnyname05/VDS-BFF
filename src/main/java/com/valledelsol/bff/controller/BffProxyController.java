@@ -95,6 +95,28 @@ public class BffProxyController {
                 .toEntity(String.class);
     }
 
+    @DeleteMapping("/usuarios/{id}")
+    public Mono<ResponseEntity<String>> eliminarUsuario(
+            @PathVariable Long id,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+        // Elimina en user-service primero, luego en auth-service
+        return userClient.delete()
+                .uri("/usuarios/{id}", id)
+                .header(HttpHeaders.AUTHORIZATION, auth)
+                .retrieve()
+                .toEntity(String.class)
+                .flatMap(resp -> {
+                    if (resp.getStatusCode().is2xxSuccessful()) {
+                        return authClient.delete()
+                                .uri("/usuarios/{id}", id)
+                                .header(HttpHeaders.AUTHORIZATION, auth)
+                                .retrieve()
+                                .toEntity(String.class);
+                    }
+                    return Mono.just(resp);
+                });
+    }
+
     @PutMapping("/admin/usuarios/{id}/rol")
     public Mono<ResponseEntity<String>> cambiarRol(
             @PathVariable Long id,
